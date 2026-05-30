@@ -1,0 +1,166 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --brand-green: #8cc63f;
+  --brand-green-dark: #5a8a1f;
+  --brand-blue: #1b75bb;
+  --brand-blue-dark: #155a8f;
+  --brand-orange: #f7941e;
+}
+
+html,
+body {
+  background: #f1f5f9;
+  color: #0f172a;
+}
+
+/* ---------------- Letterhead / Document ---------------- */
+.sheet {
+  width: 210mm;
+  min-height: 297mm;
+  margin: 0 auto;
+  background: #fff;
+  position: relative;
+  box-shadow: 0 1px 12px rgba(0, 0, 0, 0.12);
+}
+.lh-bg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: fill;
+  z-index: 0;
+  pointer-events: none;
+}
+.sheet-content {
+  position: relative;
+  z-index: 1;
+  padding: 40mm 16mm 32mm 16mm;
+}
+.doc-ref {
+  position: absolute;
+  z-index: 1;
+  bottom: 30mm;
+  left: 0;
+  right: 0;
+  text-align: center;
+  font-size: 10px;
+  color: #333;
+}
+
+/* ---------------- Asset Labels ---------------- */
+.label-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 4mm;
+  max-width: 210mm;
+  margin: 0 auto;
+}
+.label-card {
+  display: flex;
+  align-items: center;
+  gap: 3mm;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  padding: 3mm;
+  height: 28mm;
+  background: #fff;
+  overflow: hidden;
+  position: relative;
+  cursor: pointer;
+}
+.label-card.is-selected {
+  border-color: #1b75bb;
+  box-shadow: 0 0 0 1.5px #1b75bb inset;
+}
+.label-check {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  width: 16px;
+  height: 16px;
+  accent-color: #1b75bb;
+}
+.search-hidden {
+  display: none;
+}
+.label-qr {
+  width: 22mm;
+  height: 22mm;
+  flex-shrink: 0;
+}
+.label-info {
+  min-width: 0;
+  line-height: 1.25;
+}
+.label-tag {
+  font-family: ui-monospace, monospace;
+  font-size: 10px;
+  font-weight: 700;
+  color: #1b75bb;
+  word-break: break-all;
+}
+.label-name {
+  font-size: 10px;
+  font-weight: 600;
+  color: #0f172a;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.label-loc {
+  font-size: 9px;
+  color: #64748b;
+}
+.label-brand {
+  font-size: 7px;
+  color: #94a3b8;
+  margin-top: 2px;
+}
+
+@media print {
+  .label-card {
+    break-inside: avoid;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+    box-shadow: none !important;
+    border-color: #cbd5e1 !important;
+    display: none !important;
+  }
+  /* Only ticked labels print; ignore the on-screen search filter */
+  .label-card.is-selected {
+    display: flex !important;
+  }
+  .label-grid {
+    gap: 3mm;
+  }
+}
+
+@media print {
+  body {
+    background: #fff;
+  }
+  .lh-bg {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  .no-print {
+    display: none !important;
+  }
+  .sheet {
+    box-shadow: none;
+    margin: 0;
+    width: 100%;
+    min-height: auto;
+  }
+  @page {
+    size: A4;
+    margin: 0;
+  }
+  .sheet {
+    page-break-after: always;
+  }
+}
