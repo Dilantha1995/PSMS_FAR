@@ -30,9 +30,10 @@ export default async function EditCategoryPage({ params }: { params: { id: strin
             <label className="block">
               <span className="block text-sm font-medium text-slate-700 mb-1">Code</span>
               <input
-                value={cat.code}
-                readOnly
-                className="w-full rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-500"
+                name="code"
+                defaultValue={cat.code}
+                required
+                className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm font-mono"
               />
             </label>
             <Field label="Name" name="name" defaultValue={cat.name} required />

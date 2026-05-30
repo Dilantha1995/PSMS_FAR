@@ -7,6 +7,7 @@ const NAV = [
   { href: "/", label: "Dashboard", icon: "▦" },
   { href: "/assets", label: "Master FAR", icon: "▤" },
   { href: "/categories", label: "Categories", icon: "▣" },
+  { href: "/setup", label: "Coding Setup", icon: "#" },
   { href: "/depreciation", label: "Depreciation", icon: "↓" },
   { href: "/disposals", label: "Disposals", icon: "⊗" },
   { href: "/transfers", label: "Transfers", icon: "⇄" },
@@ -14,6 +15,7 @@ const NAV = [
   { href: "/documents", label: "Documents", icon: "▭" },
   { href: "/activity", label: "Activity Log", icon: "≣" },
   { href: "/import", label: "Import", icon: "⇪" },
+  { href: "/settings", label: "Settings", icon: "⚙" },
 ];
 
 export function Nav({ user }: { user: string }) {
@@ -34,6 +36,7 @@ export function Nav({ user }: { user: string }) {
             <Link
               key={item.href}
               href={item.href}
+              prefetch={false}
               className={`flex items-center gap-3 px-5 py-2.5 text-sm transition-colors ${
                 active
                   ? "bg-brand-green/20 text-white border-l-4 border-brand-green"

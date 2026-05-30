@@ -55,13 +55,34 @@ export const categories = pgTable("categories", {
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
+// ---- Sub Categories (belong to a main category; used for asset coding) ----
+export const subCategories = pgTable("sub_categories", {
+  id: serial("id").primaryKey(),
+  categoryId: integer("category_id").references(() => categories.id).notNull(),
+  code: text("code").notNull(), // e.g. CH (Chairs & Seating)
+  name: text("name").notNull(),
+  active: boolean("active").notNull().default(true),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+// ---- Locations (used for asset coding) ----
+export const locations = pgTable("locations", {
+  id: serial("id").primaryKey(),
+  code: text("code").notNull().unique(), // e.g. HO (Head Office)
+  name: text("name").notNull(),
+  active: boolean("active").notNull().default(true),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
 // ---- Assets ----
 export const assets = pgTable("assets", {
   id: serial("id").primaryKey(),
-  assetTag: text("asset_tag").notNull().unique(), // e.g. PSMS-IT-0001
+  assetTag: text("asset_tag").notNull().unique(), // e.g. PSMS/FF/CH/HO/001
   name: text("name").notNull(),
   description: text("description"),
   categoryId: integer("category_id").references(() => categories.id).notNull(),
+  subCategoryId: integer("sub_category_id").references(() => subCategories.id),
+  locationId: integer("location_id").references(() => locations.id),
   location: text("location"),
   custodian: text("custodian"),
   department: text("department"),
@@ -214,7 +235,26 @@ export const counters = pgTable("counters", {
   value: integer("value").notNull().default(0),
 });
 
+// ---- App Settings (key/value) ----
+export const settings = pgTable("settings", {
+  key: text("key").primaryKey(),
+  value: text("value").notNull(),
+});
+
+// ---- Users ----
+export const users = pgTable("users", {
+  id: serial("id").primaryKey(),
+  username: text("username").notNull().unique(),
+  fullName: text("full_name"),
+  passwordHash: text("password_hash").notNull(),
+  role: text("role").notNull().default("USER"), // ADMIN | USER
+  active: boolean("active").notNull().default(true),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
 export type Category = typeof categories.$inferSelect;
+export type SubCategory = typeof subCategories.$inferSelect;
+export type LocationRow = typeof locations.$inferSelect;
 export type Asset = typeof assets.$inferSelect;
 export type DepreciationRun = typeof depreciationRuns.$inferSelect;
 export type DepreciationLine = typeof depreciationLines.$inferSelect;
@@ -223,3 +263,5 @@ export type Transfer = typeof transfers.$inferSelect;
 export type Adjustment = typeof adjustments.$inferSelect;
 export type DocumentRow = typeof documents.$inferSelect;
 export type ActivityLog = typeof activityLogs.$inferSelect;
+export type UserRow = typeof users.$inferSelect;
+export type Setting = typeof settings.$inferSelect;

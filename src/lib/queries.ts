@@ -1,7 +1,20 @@
 import { db } from "@/db";
-import { assets, categories } from "@/db/schema";
-import { eq, desc } from "drizzle-orm";
+import { assets, categories, subCategories, locations } from "@/db/schema";
+import { eq, desc, asc } from "drizzle-orm";
 import { num, round2 } from "@/lib/format";
+
+export async function getActiveSubCategories() {
+  return db.select().from(subCategories).where(eq(subCategories.active, true)).orderBy(asc(subCategories.code));
+}
+export async function getAllSubCategories() {
+  return db.select().from(subCategories).orderBy(asc(subCategories.code));
+}
+export async function getActiveLocations() {
+  return db.select().from(locations).where(eq(locations.active, true)).orderBy(asc(locations.code));
+}
+export async function getAllLocations() {
+  return db.select().from(locations).orderBy(asc(locations.code));
+}
 
 export interface AssetWithCat {
   asset: typeof assets.$inferSelect;

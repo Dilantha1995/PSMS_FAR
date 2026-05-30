@@ -28,11 +28,11 @@ export default function LoginPage({
         <form action={login} className="space-y-4">
           <input type="hidden" name="next" value={searchParams.next || "/"} />
           <label className="block">
-            <span className="block text-sm font-medium text-slate-700 mb-1">Your name</span>
+            <span className="block text-sm font-medium text-slate-700 mb-1">Username</span>
             <input
               name="name"
               required
-              placeholder="e.g. Dilantha"
+              placeholder="your username (or name)"
               className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-brand-blue focus:outline-none focus:ring-1 focus:ring-brand-blue"
             />
           </label>

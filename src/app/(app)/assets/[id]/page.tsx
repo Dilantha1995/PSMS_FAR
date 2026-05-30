@@ -4,6 +4,8 @@ import { assets, categories, documents, adjustments } from "@/db/schema";
 import { eq, desc } from "drizzle-orm";
 import { notFound } from "next/navigation";
 import { activityForEntity } from "@/lib/activity";
+import { deleteAsset } from "@/lib/actions/assets";
+import { isAdmin } from "@/lib/auth";
 import { buildSchedule, DepAssetInput } from "@/lib/depreciation";
 import { fmtMVR, fmtDate, fmtDateTime, METHOD_LABELS, num, ADJUSTMENT_TYPE_LABELS } from "@/lib/format";
 import { nbv } from "@/lib/queries";
@@ -45,6 +47,7 @@ export default async function AssetDetail({ params }: { params: { id: string } }
   };
   const schedule = buildSchedule(depInput);
   const isActive = asset.status === "ACTIVE" || asset.status === "FULLY_DEPRECIATED";
+  const admin = isAdmin();
 
   return (
     <div className="p-8 max-w-5xl mx-auto">
@@ -71,6 +74,20 @@ export default async function AssetDetail({ params }: { params: { id: string } }
                   ⊗ Dispose
                 </Btn>
               </>
+            )}
+            {admin && (
+              <form
+                action={deleteAsset}
+                className="inline"
+              >
+                <input type="hidden" name="id" value={id} />
+                <button
+                  type="submit"
+                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-md text-sm font-medium bg-white border border-red-300 text-red-600 hover:bg-red-50"
+                >
+                  Delete
+                </button>
+              </form>
             )}
           </>
         }

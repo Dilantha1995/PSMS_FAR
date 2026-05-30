@@ -41,9 +41,11 @@ export async function createCategory(formData: FormData) {
 export async function updateCategory(formData: FormData) {
   const id = Number(formData.get("id"));
   const name = String(formData.get("name") || "").trim();
+  const code = String(formData.get("code") || "").trim();
   await db
     .update(categories)
     .set({
+      code,
       name,
       description: String(formData.get("description") || "") || null,
       defaultMethod: String(formData.get("defaultMethod") || "STRAIGHT_LINE") as any,

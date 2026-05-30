@@ -1,12 +1,12 @@
 "use server";
 
 import { db } from "@/db";
-import { assets, categories } from "@/db/schema";
+import { assets, categories, depreciationLines, disposals, transfers, adjustments, documents } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { logActivity } from "@/lib/activity";
-import { currentUser } from "@/lib/auth";
+import { currentUser, isAdmin } from "@/lib/auth";
 import { num } from "@/lib/format";
 
 function readAssetForm(formData: FormData) {
@@ -15,6 +15,8 @@ function readAssetForm(formData: FormData) {
     name: String(formData.get("name") || "").trim(),
     description: String(formData.get("description") || "") || null,
     categoryId: Number(formData.get("categoryId")),
+    subCategoryId: formData.get("subCategoryId") ? Number(formData.get("subCategoryId")) : null,
+    locationId: formData.get("locationId") ? Number(formData.get("locationId")) : null,
     location: String(formData.get("location") || "") || null,
     custodian: String(formData.get("custodian") || "") || null,
     department: String(formData.get("department") || "") || null,
@@ -87,4 +89,31 @@ export async function updateAsset(formData: FormData) {
 export async function categoryDefaults(categoryId: number) {
   const [c] = await db.select().from(categories).where(eq(categories.id, categoryId));
   return c;
+}
+
+export async function deleteAsset(formData: FormData) {
+  if (!isAdmin()) throw new Error("Only administrators can delete assets.");
+  const id = Number(formData.get("id"));
+  const [a] = await db.select().from(assets).where(eq(assets.id, id));
+  if (!a) redirect("/assets");
+
+  // Remove dependent rows first to satisfy foreign keys.
+  await db.delete(depreciationLines).where(eq(depreciationLines.assetId, id));
+  await db.delete(disposals).where(eq(disposals.assetId, id));
+  await db.delete(transfers).where(eq(transfers.assetId, id));
+  await db.delete(adjustments).where(eq(adjustments.assetId, id));
+  await db.delete(documents).where(eq(documents.relatedAssetId, id));
+  await db.delete(assets).where(eq(assets.id, id));
+
+  await logActivity({
+    action: "ASSET_DELETED",
+    entityType: "ASSET",
+    entityId: id,
+    entityLabel: `${a.assetTag} — ${a.name}`,
+    summary: `Deleted asset ${a.assetTag} — ${a.name}`,
+    user: currentUser(),
+  });
+  revalidatePath("/assets");
+  revalidatePath("/");
+  redirect("/assets");
 }
