@@ -1,5 +1,5 @@
 import { PageHeader, Btn } from "@/components/ui";
-import { PrintBar } from "@/components/PrintBar";
+import { LabelPicker, type LabelItem } from "@/components/LabelPicker";
 import { db } from "@/db";
 import { assets, categories, locations } from "@/db/schema";
 import { eq, and, ne } from "drizzle-orm";
@@ -17,7 +17,6 @@ export default async function LabelsPage({
   const cats = await getActiveCategories();
   const locs = await getActiveLocations();
 
-  // Build filtered asset list
   const conds = [];
   if (searchParams.cat) conds.push(eq(assets.categoryId, Number(searchParams.cat)));
   if (searchParams.loc) conds.push(eq(assets.locationId, Number(searchParams.loc)));
@@ -35,9 +34,9 @@ export default async function LabelsPage({
   const proto = h.get("x-forwarded-proto") || "https";
   const base = host ? `${proto}://${host}` : "";
 
-  // Generate a QR (data URL) per asset pointing at its public page
-  const labels = await Promise.all(
+  const labels: LabelItem[] = await Promise.all(
     rows.map(async (r) => ({
+      id: r.a.id,
       tag: r.a.assetTag,
       name: r.a.name,
       location: r.loc?.name || r.a.location || "",
@@ -50,7 +49,7 @@ export default async function LabelsPage({
       <div className="no-print max-w-5xl mx-auto">
         <PageHeader
           title="Asset Labels"
-          subtitle="Print QR labels in bulk — scan to view asset name, location, year and cost"
+          subtitle="Search, select and print QR labels — scan to view asset name, location, year and cost"
           action={<Btn href="/assets" variant="secondary">Back</Btn>}
         />
         <form method="get" className="flex flex-wrap items-end gap-3 mb-4 text-sm">
@@ -83,29 +82,11 @@ export default async function LabelsPage({
               <option value="active">Active only</option>
             </select>
           </label>
-          <button className="bg-slate-700 text-white rounded-md px-4 py-1.5">Apply</button>
+          <button className="bg-slate-700 text-white rounded-md px-4 py-1.5">Apply filters</button>
         </form>
-        <div className="flex items-center justify-between mb-4">
-          <span className="text-sm text-slate-500">{labels.length} label(s)</span>
-        </div>
       </div>
 
-      <PrintBar backHref="/assets" />
-
-      <div className="label-grid">
-        {labels.map((l) => (
-          <div key={l.tag} className="label-card">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={l.qr} alt="" className="label-qr" />
-            <div className="label-info">
-              <div className="label-tag">{l.tag}</div>
-              <div className="label-name">{l.name}</div>
-              {l.location && <div className="label-loc">{l.location}</div>}
-              <div className="label-brand">Pro Synergy Medical Systems</div>
-            </div>
-          </div>
-        ))}
-      </div>
+      <LabelPicker labels={labels} />
     </div>
   );
 }

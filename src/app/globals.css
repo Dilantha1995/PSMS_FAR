@@ -68,6 +68,23 @@ body {
   height: 28mm;
   background: #fff;
   overflow: hidden;
+  position: relative;
+  cursor: pointer;
+}
+.label-card.is-selected {
+  border-color: #1b75bb;
+  box-shadow: 0 0 0 1.5px #1b75bb inset;
+}
+.label-check {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  width: 16px;
+  height: 16px;
+  accent-color: #1b75bb;
+}
+.search-hidden {
+  display: none;
 }
 .label-qr {
   width: 22mm;
@@ -109,6 +126,13 @@ body {
     break-inside: avoid;
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
+    box-shadow: none !important;
+    border-color: #cbd5e1 !important;
+    display: none !important;
+  }
+  /* Only ticked labels print; ignore the on-screen search filter */
+  .label-card.is-selected {
+    display: flex !important;
   }
   .label-grid {
     gap: 3mm;
