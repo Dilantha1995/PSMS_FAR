@@ -1,0 +1,163 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --brand-green: #8cc63f;
+  --brand-green-dark: #5a8a1f;
+  --brand-blue: #1b75bb;
+  --brand-blue-dark: #155a8f;
+  --brand-orange: #f7941e;
+}
+
+html,
+body {
+  background: #f1f5f9;
+  color: #0f172a;
+}
+
+/* ---------------- Letterhead / Document ---------------- */
+.sheet {
+  width: 210mm;
+  min-height: 297mm;
+  margin: 0 auto;
+  background: #fff;
+  position: relative;
+  box-shadow: 0 1px 12px rgba(0, 0, 0, 0.12);
+  display: flex;
+  flex-direction: column;
+}
+.sheet-body {
+  flex: 1;
+  padding: 4mm 18mm 0 18mm;
+}
+
+/* Green diagonal accents top-right and bottom-left, matching the letterhead */
+.lh-accent-tr {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 55%;
+  height: 70px;
+  overflow: hidden;
+  pointer-events: none;
+}
+.lh-accent-tr::before,
+.lh-accent-tr::after {
+  content: "";
+  position: absolute;
+  top: -40px;
+  right: -20px;
+  width: 140%;
+  height: 36px;
+  transform: rotate(-18deg);
+  transform-origin: right top;
+}
+.lh-accent-tr::before {
+  background: var(--brand-green);
+  top: -34px;
+}
+.lh-accent-tr::after {
+  background: var(--brand-green-dark);
+  top: -6px;
+  height: 26px;
+  opacity: 0.85;
+}
+.lh-accent-bl {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 55%;
+  height: 70px;
+  overflow: hidden;
+  pointer-events: none;
+}
+.lh-accent-bl::before,
+.lh-accent-bl::after {
+  content: "";
+  position: absolute;
+  bottom: -34px;
+  left: -20px;
+  width: 140%;
+  height: 36px;
+  transform: rotate(-18deg);
+  transform-origin: left bottom;
+}
+.lh-accent-bl::before {
+  background: var(--brand-green);
+}
+.lh-accent-bl::after {
+  background: var(--brand-green-dark);
+  bottom: -8px;
+  height: 26px;
+  opacity: 0.85;
+}
+
+.lh-header {
+  padding: 10mm 18mm 4mm 18mm;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+.lh-logo-text {
+  line-height: 1;
+}
+.lh-logo-pro {
+  font-size: 30px;
+  font-weight: 700;
+  color: var(--brand-blue);
+  letter-spacing: -0.5px;
+}
+.lh-logo-sub {
+  font-size: 13px;
+  color: var(--brand-blue);
+  font-weight: 600;
+  margin-top: 2px;
+}
+.lh-reg {
+  font-size: 10px;
+  color: #444;
+  margin-top: 3px;
+}
+.lh-bismillah {
+  font-size: 18px;
+  color: #333;
+  font-family: "Traditional Arabic", "Amiri", serif;
+}
+.lh-footer {
+  border-top: 1px solid var(--brand-green);
+  padding: 4mm 18mm 8mm 18mm;
+  font-size: 9px;
+  color: #555;
+  text-align: right;
+  position: relative;
+  z-index: 2;
+}
+.doc-page-number {
+  font-size: 10px;
+  color: #333;
+  text-align: center;
+  padding-bottom: 2mm;
+}
+
+@media print {
+  body {
+    background: #fff;
+  }
+  .no-print {
+    display: none !important;
+  }
+  .sheet {
+    box-shadow: none;
+    margin: 0;
+    width: 100%;
+    min-height: auto;
+  }
+  @page {
+    size: A4;
+    margin: 0;
+  }
+  .sheet {
+    page-break-after: always;
+  }
+}
