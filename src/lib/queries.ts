@@ -79,6 +79,51 @@ export interface CategoryBreakdown {
   nbv: number;
 }
 
+export interface CategorySummaryRow {
+  code: string;
+  name: string;
+  rate: string;
+  count: number;
+  openingCost: number;
+  additions: number;
+  cost: number;
+  accumDep: number;
+  nbv: number;
+}
+
+/** Category-wise summary; additions = assets acquired within [yearStart, yearEnd]. */
+export function categorySummary(rows: AssetWithCat[], year: number): CategorySummaryRow[] {
+  const start = `${year}-01-01`;
+  const end = `${year}-12-31`;
+  const map = new Map<string, CategorySummaryRow>();
+  for (const r of rows) {
+    const key = r.category?.code || "—";
+    const e =
+      map.get(key) ||
+      ({
+        code: r.category?.code || "—",
+        name: r.category?.name || "Uncategorised",
+        rate: r.category?.defaultRate || "0",
+        count: 0,
+        openingCost: 0,
+        additions: 0,
+        cost: 0,
+        accumDep: 0,
+        nbv: 0,
+      } as CategorySummaryRow);
+    const cost = num(r.asset.cost);
+    const isAddition = r.asset.acquisitionDate >= start && r.asset.acquisitionDate <= end;
+    e.count++;
+    e.cost = round2(e.cost + cost);
+    if (isAddition) e.additions = round2(e.additions + cost);
+    else e.openingCost = round2(e.openingCost + cost);
+    e.accumDep = round2(e.accumDep + num(r.asset.accumulatedDepreciation));
+    e.nbv = round2(e.nbv + nbv(r.asset));
+    map.set(key, e);
+  }
+  return Array.from(map.values()).sort((a, b) => a.name.localeCompare(b.name));
+}
+
 export function breakdownByCategory(rows: AssetWithCat[]): CategoryBreakdown[] {
   const map = new Map<string, CategoryBreakdown>();
   for (const r of rows) {

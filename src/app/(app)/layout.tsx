@@ -5,7 +5,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const user = currentUser();
   return (
     <div className="flex min-h-screen">
-      <Nav user={user} />
+      <div className="no-print">
+        <Nav user={user} />
+      </div>
       <main className="flex-1 min-w-0">{children}</main>
     </div>
   );

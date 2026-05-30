@@ -20,6 +20,8 @@ export async function middleware(req: NextRequest) {
 
   // Allow the login page and its action through.
   if (pathname.startsWith("/login")) return NextResponse.next();
+  // Allow public asset QR-scan pages (read-only) through.
+  if (pathname.startsWith("/p/")) return NextResponse.next();
 
   const token = req.cookies.get(AUTH_COOKIE)?.value;
   const expected = await expectedToken();

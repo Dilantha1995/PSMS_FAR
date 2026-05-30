@@ -13,6 +13,8 @@ const NAV = [
   { href: "/transfers", label: "Transfers", icon: "⇄" },
   { href: "/adjustments", label: "Adjustments", icon: "±" },
   { href: "/documents", label: "Documents", icon: "▭" },
+  { href: "/reports", label: "Reports", icon: "▥" },
+  { href: "/labels", label: "Asset Labels", icon: "▦" },
   { href: "/activity", label: "Activity Log", icon: "≣" },
   { href: "/import", label: "Import", icon: "⇪" },
   { href: "/settings", label: "Settings", icon: "⚙" },

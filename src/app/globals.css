@@ -24,125 +24,104 @@ body {
   background: #fff;
   position: relative;
   box-shadow: 0 1px 12px rgba(0, 0, 0, 0.12);
-  display: flex;
-  flex-direction: column;
 }
-.sheet-body {
-  flex: 1;
-  padding: 4mm 18mm 0 18mm;
-}
-
-/* Green diagonal accents top-right and bottom-left, matching the letterhead */
-.lh-accent-tr {
+.lh-bg {
   position: absolute;
-  top: 0;
-  right: 0;
-  width: 55%;
-  height: 70px;
-  overflow: hidden;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: fill;
+  z-index: 0;
   pointer-events: none;
 }
-.lh-accent-tr::before,
-.lh-accent-tr::after {
-  content: "";
+.sheet-content {
+  position: relative;
+  z-index: 1;
+  padding: 40mm 16mm 32mm 16mm;
+}
+.doc-ref {
   position: absolute;
-  top: -40px;
-  right: -20px;
-  width: 140%;
-  height: 36px;
-  transform: rotate(-18deg);
-  transform-origin: right top;
-}
-.lh-accent-tr::before {
-  background: var(--brand-green);
-  top: -34px;
-}
-.lh-accent-tr::after {
-  background: var(--brand-green-dark);
-  top: -6px;
-  height: 26px;
-  opacity: 0.85;
-}
-.lh-accent-bl {
-  position: absolute;
-  bottom: 0;
+  z-index: 1;
+  bottom: 30mm;
   left: 0;
-  width: 55%;
-  height: 70px;
-  overflow: hidden;
-  pointer-events: none;
-}
-.lh-accent-bl::before,
-.lh-accent-bl::after {
-  content: "";
-  position: absolute;
-  bottom: -34px;
-  left: -20px;
-  width: 140%;
-  height: 36px;
-  transform: rotate(-18deg);
-  transform-origin: left bottom;
-}
-.lh-accent-bl::before {
-  background: var(--brand-green);
-}
-.lh-accent-bl::after {
-  background: var(--brand-green-dark);
-  bottom: -8px;
-  height: 26px;
-  opacity: 0.85;
+  right: 0;
+  text-align: center;
+  font-size: 10px;
+  color: #333;
 }
 
-.lh-header {
-  padding: 10mm 18mm 4mm 18mm;
+/* ---------------- Asset Labels ---------------- */
+.label-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 4mm;
+  max-width: 210mm;
+  margin: 0 auto;
+}
+.label-card {
   display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
+  align-items: center;
+  gap: 3mm;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  padding: 3mm;
+  height: 28mm;
+  background: #fff;
+  overflow: hidden;
 }
-.lh-logo-text {
-  line-height: 1;
+.label-qr {
+  width: 22mm;
+  height: 22mm;
+  flex-shrink: 0;
 }
-.lh-logo-pro {
-  font-size: 30px;
+.label-info {
+  min-width: 0;
+  line-height: 1.25;
+}
+.label-tag {
+  font-family: ui-monospace, monospace;
+  font-size: 10px;
   font-weight: 700;
-  color: var(--brand-blue);
-  letter-spacing: -0.5px;
+  color: #1b75bb;
+  word-break: break-all;
 }
-.lh-logo-sub {
-  font-size: 13px;
-  color: var(--brand-blue);
+.label-name {
+  font-size: 10px;
   font-weight: 600;
+  color: #0f172a;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.label-loc {
+  font-size: 9px;
+  color: #64748b;
+}
+.label-brand {
+  font-size: 7px;
+  color: #94a3b8;
   margin-top: 2px;
 }
-.lh-reg {
-  font-size: 10px;
-  color: #444;
-  margin-top: 3px;
-}
-.lh-bismillah {
-  font-size: 18px;
-  color: #333;
-  font-family: "Traditional Arabic", "Amiri", serif;
-}
-.lh-footer {
-  border-top: 1px solid var(--brand-green);
-  padding: 4mm 18mm 8mm 18mm;
-  font-size: 9px;
-  color: #555;
-  text-align: right;
-  position: relative;
-  z-index: 2;
-}
-.doc-page-number {
-  font-size: 10px;
-  color: #333;
-  text-align: center;
-  padding-bottom: 2mm;
+
+@media print {
+  .label-card {
+    break-inside: avoid;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  .label-grid {
+    gap: 3mm;
+  }
 }
 
 @media print {
   body {
     background: #fff;
+  }
+  .lh-bg {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
   }
   .no-print {
     display: none !important;
