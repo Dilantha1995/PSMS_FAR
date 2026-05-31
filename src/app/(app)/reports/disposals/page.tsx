@@ -102,6 +102,58 @@ export default async function DisposalReport({ searchParams }: { searchParams: {
           </table>
         )}
         <p style={{ fontSize: 10, color: "#888", marginTop: 16 }}>Amounts in Maldivian Rufiyaa (MVR).</p>
+
+        {rows.length > 0 && (
+          <div style={{ marginTop: 24 }}>
+            <h2 style={{ fontSize: 13, fontWeight: 700, color: "#1f3a5f", marginBottom: 8 }}>
+              Accounting Treatment — Double Entry
+            </h2>
+            {rows.map((d) => {
+              const cost = Number(d.costAtDisposal);
+              const accum = Number(d.accumDepAtDisposal);
+              const proceeds = Number(d.proceeds);
+              const gl = Number(d.gainLoss);
+              const lines: { acc: string; dr?: number; cr?: number }[] = [];
+              if (accum) lines.push({ acc: "Accumulated Depreciation", dr: accum });
+              if (proceeds) lines.push({ acc: "Bank / Cash (proceeds)", dr: proceeds });
+              if (gl < 0) lines.push({ acc: "Loss on Disposal of Asset", dr: -gl });
+              lines.push({ acc: "Fixed Asset — Cost", cr: cost });
+              if (gl > 0) lines.push({ acc: "Gain on Disposal of Asset", cr: gl });
+              const drTot = lines.reduce((a, l) => a + (l.dr || 0), 0);
+              const crTot = lines.reduce((a, l) => a + (l.cr || 0), 0);
+              return (
+                <div key={d.id} style={{ marginBottom: 12, breakInside: "avoid" }}>
+                  <div style={{ fontSize: 10.5, color: "#1b75bb", fontFamily: "monospace", fontWeight: 700 }}>
+                    {d.referenceNo} — {d.assetTag} ({fmtDate(d.disposalDate)})
+                  </div>
+                  <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 10.5, marginTop: 3 }}>
+                    <thead>
+                      <tr style={{ color: "#475569" }}>
+                        <th style={{ ...thl, padding: "3px 8px" }}>Account</th>
+                        <th style={{ ...thr, padding: "3px 8px" }}>Debit</th>
+                        <th style={{ ...thr, padding: "3px 8px" }}>Credit</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {lines.map((l, i) => (
+                        <tr key={i}>
+                          <td style={{ ...tdl, paddingLeft: l.cr ? 24 : 8 }}>{l.acc}</td>
+                          <td style={tdr}>{l.dr ? fmtMVR(l.dr, false) : ""}</td>
+                          <td style={tdr}>{l.cr ? fmtMVR(l.cr, false) : ""}</td>
+                        </tr>
+                      ))}
+                      <tr style={{ fontWeight: 700, background: "#f6f9fc" }}>
+                        <td style={tdl}>Total</td>
+                        <td style={tdr}>{fmtMVR(drTot, false)}</td>
+                        <td style={tdr}>{fmtMVR(crTot, false)}</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              );
+            })}
+          </div>
+        )}
       </DocumentSheet>
     </div>
   );

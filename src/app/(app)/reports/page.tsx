@@ -10,9 +10,14 @@ const reports = [
     desc: "Category-wise cost, depreciation and net book value — matches your summary sheet. PDF & Excel.",
   },
   {
+    href: "/reports/depreciation",
+    title: "Depreciation Report",
+    desc: "Monthly accumulated-depreciation movement: opening, charge for the month, disposals, closing. PDF & Excel.",
+  },
+  {
     href: "/reports/disposals",
     title: "Disposal Report",
-    desc: "All asset disposals with proceeds and gain/loss for a selected period. PDF & Excel.",
+    desc: "Disposals with proceeds, gain/loss and the double-entry accounting treatment. PDF & Excel.",
   },
   {
     href: "/reports/additions",
