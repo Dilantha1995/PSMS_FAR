@@ -109,6 +109,100 @@ function drawTable(
   return y;
 }
 
+/** Wraps and draws a block of text, returning the y just below the last line. */
+function drawParagraph(
+  page: PDFPage,
+  font: PDFFont,
+  text: string,
+  size: number,
+  x: number,
+  startY: number,
+  width: number,
+  color: RGB = MUTED
+): number {
+  const lineHeight = size + px(4);
+  let y = startY;
+  for (const line of wrapText(font, text, size, width)) {
+    page.drawText(line, { x, y: y - size, size, font, color });
+    y -= lineHeight;
+  }
+  return y;
+}
+
+/** A shaded 2-column key/value box, e.g. "Receiving Person" details. Each
+ *  cell wraps and the box grows to fit, so a long name/designation never
+ *  overflows or collides with the next line. */
+function drawInfoBox(
+  page: PDFPage,
+  font: PDFFont,
+  bold: PDFFont,
+  title: string,
+  rows: RowSpec[],
+  x: number,
+  startY: number,
+  width: number
+): number {
+  const padX = px(14);
+  const padY = px(10);
+  const titleSize = px(12);
+  const rowSize = px(12);
+  const rowGap = px(8);
+  const lineGap = px(3);
+  const colGap = px(24);
+  const colW = (width - padX * 2 - colGap) / 2;
+
+  const cells = rows.map((row) => {
+    const labelText = `${row.label}: `;
+    const labelW = font.widthOfTextAtSize(labelText, rowSize);
+    return { labelText, labelW, lines: wrapText(bold, row.value, rowSize, colW - labelW) };
+  });
+
+  const gridRows: { left: (typeof cells)[number]; right?: (typeof cells)[number] }[] = [];
+  for (let i = 0; i < cells.length; i += 2) gridRows.push({ left: cells[i], right: cells[i + 1] });
+
+  const rowHeights = gridRows.map(
+    (gr) => Math.max(gr.left.lines.length, gr.right?.lines.length ?? 1) * (rowSize + lineGap) - lineGap
+  );
+  const contentHeight = rowHeights.reduce((a, b) => a + b, 0) + (gridRows.length - 1) * rowGap;
+  const boxHeight = padY * 2 + titleSize + px(6) + contentHeight;
+  const boxBottom = startY - boxHeight;
+
+  page.drawRectangle({
+    x,
+    y: boxBottom,
+    width,
+    height: boxHeight,
+    color: rgb(0.973, 0.98, 0.988),
+    borderWidth: 1,
+    borderColor: BORDER,
+  });
+
+  let textY = startY - padY - titleSize;
+  page.drawText(title, { x: x + padX, y: textY, size: titleSize, font: bold, color: INK });
+  textY -= titleSize + px(6);
+
+  gridRows.forEach((gr, i) => {
+    [gr.left, gr.right].forEach((cell, col) => {
+      if (!cell) return;
+      const cx = x + padX + col * (colW + colGap);
+      page.drawText(cell.labelText, { x: cx, y: textY, size: rowSize, font, color: MUTED });
+      page.drawText(cell.lines[0] ?? "—", { x: cx + cell.labelW, y: textY, size: rowSize, font: bold, color: INK });
+      for (let li = 1; li < cell.lines.length; li++) {
+        page.drawText(cell.lines[li], {
+          x: cx,
+          y: textY - li * (rowSize + lineGap),
+          size: rowSize,
+          font: bold,
+          color: INK,
+        });
+      }
+    });
+    textY -= rowHeights[i] + rowGap;
+  });
+
+  return boxBottom;
+}
+
 export async function generateDocumentPdf(doc: DocumentRow): Promise<Uint8Array> {
   const p = doc.payload as any;
   const isDisposal = p.kind === "DISPOSAL";
@@ -129,7 +223,7 @@ export async function generateDocumentPdf(doc: DocumentRow): Promise<Uint8Array>
   let y = PAGE_H - PAD_TOP;
 
   // Title
-  const title = isDisposal ? "ASSET DISPOSAL NOTE" : "ASSET TRANSFER NOTE";
+  const title = isDisposal ? "ASSET DISPOSAL NOTE" : "ASSET TRANSFER / HANDOVER FORM";
   const titleSize = px(18);
   page.drawText(title, {
     x: (PAGE_W - bold.widthOfTextAtSize(title, titleSize)) / 2,
@@ -156,9 +250,41 @@ export async function generateDocumentPdf(doc: DocumentRow): Promise<Uint8Array>
   page.drawText(dateValue, { x: dateStartX + dateLabelW, y, size: metaSize, font, color: INK });
   y -= metaSize + px(18);
 
+  if (!isDisposal) {
+    y = drawInfoBox(
+      page,
+      font,
+      bold,
+      "Receiving Person",
+      [
+        { label: "Name", value: p.to?.custodian || "—" },
+        { label: "Designation", value: p.to?.designation || "—" },
+        { label: "Department", value: p.to?.department || "—" },
+        { label: "Location", value: p.to?.location || "—" },
+      ],
+      PAD_SIDE,
+      y,
+      contentW
+    );
+    y -= px(14);
+
+    const introSize = px(12);
+    y = drawParagraph(
+      page,
+      font,
+      `Dear ${p.to?.custodian || "Recipient"}, please find below the asset(s) handed over to you for official use. Kindly utilize and safeguard the item(s) responsibly.`,
+      introSize,
+      PAD_SIDE,
+      y,
+      contentW,
+      rgb(0.2, 0.2, 0.2)
+    );
+    y -= px(6);
+  }
+
   // Main details table
   const rows: RowSpec[] = [
-    { label: "Asset Tag", value: p.assetTag || "—" },
+    { label: isDisposal ? "Asset Tag" : "Asset Code", value: p.assetTag || "—" },
     { label: "Asset Name", value: p.assetName || "—" },
   ];
   if (p.serialNo) rows.push({ label: "Serial Number", value: p.serialNo });
@@ -175,11 +301,8 @@ export async function generateDocumentPdf(doc: DocumentRow): Promise<Uint8Array>
       label: "From (Location / Dept / Custodian)",
       value: `${p.from?.location || "—"} / ${p.from?.department || "—"} / ${p.from?.custodian || "—"}`,
     });
-    rows.push({
-      label: "To (Location / Dept / Custodian)",
-      value: `${p.to?.location || "—"} / ${p.to?.department || "—"} / ${p.to?.custodian || "—"}`,
-    });
-    rows.push({ label: "Transfer Type", value: p.external ? "External (leaves company)" : "Internal" });
+    rows.push({ label: "Transfer/Handover Type", value: p.external ? "External (leaves company)" : "Internal" });
+    if (p.accessories) rows.push({ label: "Other Accessories", value: p.accessories });
   }
   if (p.reason) rows.push({ label: "Reason / Remarks", value: p.reason });
 
@@ -207,9 +330,11 @@ export async function generateDocumentPdf(doc: DocumentRow): Promise<Uint8Array>
 
   // Signature block
   y -= px(64);
-  const signLabels = ["Prepared By", "Approved By", "Received By"];
+  const signLabels = isDisposal
+    ? ["Prepared By", "Approved By", "Received By"]
+    : ["Prepared By", "Checked By", "Approved By", "Handed Over By"];
   const gap = px(32);
-  const colW = (contentW - gap * 2) / 3;
+  const colW = (contentW - gap * (signLabels.length - 1)) / signLabels.length;
   signLabels.forEach((label, i) => {
     const x = PAD_SIDE + i * (colW + gap);
     page.drawLine({ start: { x, y }, end: { x: x + colW, y }, thickness: 1, color: rgb(0.2, 0.2, 0.2) });
@@ -233,6 +358,40 @@ export async function generateDocumentPdf(doc: DocumentRow): Promise<Uint8Array>
       color: FAINT,
     });
   });
+
+  if (!isDisposal) {
+    y -= px(50);
+    page.drawLine({ start: { x: PAD_SIDE, y }, end: { x: PAD_SIDE + contentW, y }, thickness: 1, color: BORDER });
+    y -= px(14);
+
+    const ackHeadSize = px(12);
+    page.drawText("ACKNOWLEDGMENT", { x: PAD_SIDE, y: y - ackHeadSize, size: ackHeadSize, font: bold, color: INK });
+    y -= ackHeadSize + px(6);
+
+    y = drawParagraph(
+      page,
+      font,
+      "By signing below, I acknowledge that the asset(s) listed above have been handed over to me and are my responsibility until they are returned. I understand that if they are lost, stolen, or damaged while in my care, I will be held responsible for their repair or replacement.",
+      px(10.5),
+      PAD_SIDE,
+      y,
+      contentW,
+      MUTED
+    );
+    y -= px(48);
+
+    const ackColW = contentW * 0.45;
+    page.drawLine({ start: { x: PAD_SIDE, y }, end: { x: PAD_SIDE + ackColW, y }, thickness: 1, color: rgb(0.2, 0.2, 0.2) });
+    const ackLabelSize = px(11);
+    page.drawText("Acknowledged & Received By", { x: PAD_SIDE, y: y - ackLabelSize - px(6), size: ackLabelSize, font, color: MUTED });
+    page.drawText("Name / Signature / Date", {
+      x: PAD_SIDE,
+      y: y - ackLabelSize - px(6) - px(10) - px(3),
+      size: px(10),
+      font,
+      color: FAINT,
+    });
+  }
 
   // Footer reference/page meta, matches .doc-ref
   const meta = `Ref: ${doc.referenceNo}  ·  Page 1 of ${doc.pageCount}`;

@@ -15,6 +15,8 @@ export async function createTransfer(formData: FormData) {
   const toLocation = String(formData.get("toLocation") || "") || null;
   const toCustodian = String(formData.get("toCustodian") || "") || null;
   const toDepartment = String(formData.get("toDepartment") || "") || null;
+  const toDesignation = String(formData.get("toDesignation") || "") || null;
+  const accessories = String(formData.get("accessories") || "") || null;
   const reason = String(formData.get("reason") || "") || null;
   const approvedBy = String(formData.get("approvedBy") || "") || null;
   const external = formData.get("external") === "on";
@@ -35,8 +37,9 @@ export async function createTransfer(formData: FormData) {
     category: cat ? `${cat.code} — ${cat.name}` : "",
     transferDate,
     from: { location: asset.location, custodian: asset.custodian, department: asset.department },
-    to: { location: toLocation, custodian: toCustodian, department: toDepartment },
+    to: { location: toLocation, custodian: toCustodian, department: toDepartment, designation: toDesignation },
     external,
+    accessories,
     reason,
     approvedBy,
     preparedBy: user,
@@ -122,6 +125,8 @@ export async function createManualTransfer(formData: FormData) {
   const toLocation = String(formData.get("toLocation") || "").trim() || null;
   const toDepartment = String(formData.get("toDepartment") || "").trim() || null;
   const toCustodian = String(formData.get("toCustodian") || "").trim() || null;
+  const toDesignation = String(formData.get("toDesignation") || "").trim() || null;
+  const accessories = String(formData.get("accessories") || "").trim() || null;
   const reason = String(formData.get("reason") || "").trim() || null;
   const approvedBy = String(formData.get("approvedBy") || "").trim() || null;
   const external = formData.get("external") === "on";
@@ -142,8 +147,9 @@ export async function createManualTransfer(formData: FormData) {
     category,
     transferDate,
     from: { location: fromLocation, custodian: fromCustodian, department: fromDepartment },
-    to: { location: toLocation, custodian: toCustodian, department: toDepartment },
+    to: { location: toLocation, custodian: toCustodian, department: toDepartment, designation: toDesignation },
     external,
+    accessories,
     reason,
     approvedBy,
     preparedBy: user,

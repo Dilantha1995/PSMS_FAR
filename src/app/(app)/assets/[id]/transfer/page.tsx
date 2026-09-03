@@ -48,11 +48,21 @@ export default async function TransferPage({ params }: { params: { id: string } 
         <form action={createTransfer} className="space-y-5">
           <input type="hidden" name="assetId" value={asset.id} />
           <Field label="Transfer Date" name="transferDate" type="date" defaultValue={todayISO()} required />
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Field label="New Location" name="toLocation" defaultValue={asset.location || ""} />
             <Field label="New Department" name="toDepartment" defaultValue={asset.department || ""} />
-            <Field label="New Custodian" name="toCustodian" defaultValue={asset.custodian || ""} />
           </div>
+          <h3 className="font-semibold text-slate-800 pt-2">Receiving Person</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <Field label="Name" name="toCustodian" defaultValue={asset.custodian || ""} />
+            <Field label="Designation" name="toDesignation" />
+          </div>
+          <Field
+            label="Other Accessories"
+            name="accessories"
+            type="textarea"
+            placeholder="e.g. Charger, laptop bag, mouse, docking station"
+          />
           <Field label="Approved By" name="approvedBy" />
           <Field label="Reason / Remarks" name="reason" type="textarea" />
           <label className="flex items-center gap-2 text-sm text-slate-700">
