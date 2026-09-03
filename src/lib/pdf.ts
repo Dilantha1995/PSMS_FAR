@@ -13,7 +13,10 @@ import { fmtMVR, fmtDate, DISPOSAL_METHOD_LABELS } from "@/lib/format";
 const MM = 2.83464567; // pt per mm
 const PAGE_W = 210 * MM;
 const PAGE_H = 297 * MM;
-const PAD_TOP = 40 * MM;
+// The letterhead artwork's "Company Registration No." line sits at ~44-46mm
+// from the top, so the title needs clearance below that, not the 40mm the
+// on-screen HTML padding uses (its line-height/margins add a bit more).
+const PAD_TOP = 52 * MM;
 const PAD_SIDE = 16 * MM;
 const FOOTER_Y = 30 * MM;
 
