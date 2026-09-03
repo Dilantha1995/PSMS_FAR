@@ -160,7 +160,9 @@ body {
     size: A4;
     margin: 0;
   }
-  .sheet {
-    page-break-after: always;
+  /* Break between sheets only when there's more than one — a single sheet
+     must not leave a trailing blank page. */
+  .sheet + .sheet {
+    page-break-before: always;
   }
 }

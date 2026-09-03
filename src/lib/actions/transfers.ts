@@ -103,3 +103,79 @@ export async function createTransfer(formData: FormData) {
   revalidatePath("/documents");
   redirect(`/documents/${doc.id}`);
 }
+
+/**
+ * Generates a Transfer Note for an asset that isn't (yet, or won't be) in the
+ * FAR — every field is typed in by hand. No asset/transfer record is
+ * created since there's no registered asset to update; only the printable
+ * document is saved, numbered from the same reference sequence.
+ */
+export async function createManualTransfer(formData: FormData) {
+  const assetTag = String(formData.get("assetTag") || "").trim();
+  const assetName = String(formData.get("assetName") || "").trim();
+  const serialNo = String(formData.get("serialNo") || "").trim() || null;
+  const category = String(formData.get("category") || "").trim() || null;
+  const transferDate = String(formData.get("transferDate") || "");
+  const fromLocation = String(formData.get("fromLocation") || "").trim() || null;
+  const fromDepartment = String(formData.get("fromDepartment") || "").trim() || null;
+  const fromCustodian = String(formData.get("fromCustodian") || "").trim() || null;
+  const toLocation = String(formData.get("toLocation") || "").trim() || null;
+  const toDepartment = String(formData.get("toDepartment") || "").trim() || null;
+  const toCustodian = String(formData.get("toCustodian") || "").trim() || null;
+  const reason = String(formData.get("reason") || "").trim() || null;
+  const approvedBy = String(formData.get("approvedBy") || "").trim() || null;
+  const external = formData.get("external") === "on";
+
+  if (!assetTag || !assetName || !transferDate) {
+    throw new Error("Asset Tag, Asset Name and Transfer Date are required");
+  }
+
+  const referenceNo = await nextReference("TRANSFER");
+  const user = currentUser();
+
+  const payload = {
+    kind: "TRANSFER",
+    manual: true,
+    assetTag,
+    assetName,
+    serialNo,
+    category,
+    transferDate,
+    from: { location: fromLocation, custodian: fromCustodian, department: fromDepartment },
+    to: { location: toLocation, custodian: toCustodian, department: toDepartment },
+    external,
+    reason,
+    approvedBy,
+    preparedBy: user,
+  };
+
+  const [doc] = await db
+    .insert(documents)
+    .values({
+      referenceNo,
+      type: "TRANSFER",
+      title: `Asset Transfer Note (Manual) — ${assetTag}`,
+      relatedAssetId: null,
+      relatedAssetTag: assetTag,
+      payload,
+      pageCount: 1,
+      createdBy: user,
+    })
+    .returning();
+
+  await logActivity({
+    action: "MANUAL_TRANSFER_NOTE_GENERATED",
+    entityType: "DOCUMENT",
+    entityId: doc.id,
+    entityLabel: `${assetTag} — ${assetName}`,
+    summary: `Generated a manual Transfer Note for ${assetTag} (not in FAR), from ${fromLocation || "-"} to ${
+      toLocation || "-"
+    }${external ? " (external)" : ""}. Doc ${referenceNo}`,
+    details: { referenceNo, documentId: doc.id, from: fromLocation, to: toLocation, external },
+    user,
+  });
+
+  revalidatePath("/transfers");
+  revalidatePath("/documents");
+  redirect(`/documents/${doc.id}`);
+}
