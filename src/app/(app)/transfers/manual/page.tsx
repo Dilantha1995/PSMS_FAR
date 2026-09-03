@@ -29,7 +29,7 @@ export default function ManualTransferPage() {
         <form action={createManualTransfer} className="space-y-5">
           <h3 className="font-semibold text-slate-800">Asset Details</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Field label="Asset Tag" name="assetTag" required placeholder="e.g. PS/OE/LAP/HO/017" />
+            <Field label="Asset Code" name="assetTag" required placeholder="e.g. PS/OE/LAP/HO/017" />
             <Field label="Asset Name" name="assetName" required placeholder="e.g. Lenovo E16 - (i7/16GB/512SSD)" />
             <Field label="Serial Number" name="serialNo" />
             <Field label="Category" name="category" placeholder="e.g. OE — Office Equipment" />
@@ -53,6 +53,12 @@ export default function ManualTransferPage() {
             <Field label="Designation" name="toDesignation" />
           </div>
 
+          <Field
+            label="Other Accessories"
+            name="accessories"
+            type="textarea"
+            placeholder="e.g. Charger, laptop bag, mouse, docking station"
+          />
           <Field label="Approved By" name="approvedBy" />
           <Field label="Reason / Remarks" name="reason" type="textarea" />
 

@@ -223,7 +223,7 @@ export async function generateDocumentPdf(doc: DocumentRow): Promise<Uint8Array>
   let y = PAGE_H - PAD_TOP;
 
   // Title
-  const title = isDisposal ? "ASSET DISPOSAL NOTE" : "ASSET TRANSFER NOTE";
+  const title = isDisposal ? "ASSET DISPOSAL NOTE" : "ASSET TRANSFER / HANDOVER FORM";
   const titleSize = px(18);
   page.drawText(title, {
     x: (PAGE_W - bold.widthOfTextAtSize(title, titleSize)) / 2,
@@ -284,7 +284,7 @@ export async function generateDocumentPdf(doc: DocumentRow): Promise<Uint8Array>
 
   // Main details table
   const rows: RowSpec[] = [
-    { label: "Asset Tag", value: p.assetTag || "—" },
+    { label: isDisposal ? "Asset Tag" : "Asset Code", value: p.assetTag || "—" },
     { label: "Asset Name", value: p.assetName || "—" },
   ];
   if (p.serialNo) rows.push({ label: "Serial Number", value: p.serialNo });
@@ -301,7 +301,8 @@ export async function generateDocumentPdf(doc: DocumentRow): Promise<Uint8Array>
       label: "From (Location / Dept / Custodian)",
       value: `${p.from?.location || "—"} / ${p.from?.department || "—"} / ${p.from?.custodian || "—"}`,
     });
-    rows.push({ label: "Transfer Type", value: p.external ? "External (leaves company)" : "Internal" });
+    rows.push({ label: "Transfer/Handover Type", value: p.external ? "External (leaves company)" : "Internal" });
+    if (p.accessories) rows.push({ label: "Other Accessories", value: p.accessories });
   }
   if (p.reason) rows.push({ label: "Reason / Remarks", value: p.reason });
 

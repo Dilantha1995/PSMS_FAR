@@ -57,6 +57,12 @@ export default async function TransferPage({ params }: { params: { id: string } 
             <Field label="Name" name="toCustodian" defaultValue={asset.custodian || ""} />
             <Field label="Designation" name="toDesignation" />
           </div>
+          <Field
+            label="Other Accessories"
+            name="accessories"
+            type="textarea"
+            placeholder="e.g. Charger, laptop bag, mouse, docking station"
+          />
           <Field label="Approved By" name="approvedBy" />
           <Field label="Reason / Remarks" name="reason" type="textarea" />
           <label className="flex items-center gap-2 text-sm text-slate-700">

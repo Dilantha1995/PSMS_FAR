@@ -73,7 +73,7 @@ export default async function DocumentView({ params }: { params: { id: string } 
       <DocumentSheet referenceNo={doc.referenceNo} page={1} pages={doc.pageCount}>
         <div style={{ textAlign: "center", margin: "8px 0 4px" }}>
           <h1 style={{ fontSize: 18, fontWeight: 700, color: "#111", letterSpacing: 0.5 }}>
-            {isDisposal ? "ASSET DISPOSAL NOTE" : "ASSET TRANSFER NOTE"}
+            {isDisposal ? "ASSET DISPOSAL NOTE" : "ASSET TRANSFER / HANDOVER FORM"}
           </h1>
         </div>
 
@@ -106,7 +106,7 @@ export default async function DocumentView({ params }: { params: { id: string } 
 
         <table style={tableStyle}>
           <tbody>
-            <Row label="Asset Tag" value={p.assetTag} />
+            <Row label={isDisposal ? "Asset Tag" : "Asset Code"} value={p.assetTag} />
             <Row label="Asset Name" value={p.assetName} />
             {p.serialNo && <Row label="Serial Number" value={p.serialNo} />}
             <Row label="Category" value={p.category} />
@@ -124,7 +124,8 @@ export default async function DocumentView({ params }: { params: { id: string } 
                   label="From (Location / Dept / Custodian)"
                   value={`${p.from?.location || "—"} / ${p.from?.department || "—"} / ${p.from?.custodian || "—"}`}
                 />
-                <Row label="Transfer Type" value={p.external ? "External (leaves company)" : "Internal"} />
+                <Row label="Transfer/Handover Type" value={p.external ? "External (leaves company)" : "Internal"} />
+                {p.accessories && <Row label="Other Accessories" value={p.accessories} />}
               </>
             )}
             {p.reason && <Row label="Reason / Remarks" value={p.reason} />}
