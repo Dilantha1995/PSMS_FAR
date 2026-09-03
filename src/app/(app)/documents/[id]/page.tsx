@@ -158,7 +158,7 @@ export default async function DocumentView({ params }: { params: { id: string } 
         {!isDisposal && (
           <div style={{ marginTop: 28, borderTop: "1px solid #e2e8f0", paddingTop: 14 }}>
             <div style={{ fontSize: 12, fontWeight: 700, color: "#111", marginBottom: 4 }}>ACKNOWLEDGMENT</div>
-            <p style={{ fontSize: 11, color: "#333", fontStyle: "italic", lineHeight: 1.5, margin: "0 0 20px" }}>
+            <p style={{ fontSize: 11, color: "#333", fontStyle: "italic", lineHeight: 1.5, margin: "0 0 44px" }}>
               By signing below, I acknowledge that the asset(s) listed above have been handed over to me and are
               my responsibility until they are returned. I understand that if they are lost, stolen, or damaged
               while in my care, I will be held responsible for their repair or replacement.

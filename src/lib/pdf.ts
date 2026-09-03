@@ -129,7 +129,9 @@ function drawParagraph(
   return y;
 }
 
-/** A shaded 2-column key/value box, e.g. "Receiving Person" details. */
+/** A shaded 2-column key/value box, e.g. "Receiving Person" details. Each
+ *  cell wraps and the box grows to fit, so a long name/designation never
+ *  overflows or collides with the next line. */
 function drawInfoBox(
   page: PDFPage,
   font: PDFFont,
@@ -144,11 +146,25 @@ function drawInfoBox(
   const padY = px(10);
   const titleSize = px(12);
   const rowSize = px(12);
-  const rowGap = px(6);
+  const rowGap = px(8);
+  const lineGap = px(3);
   const colGap = px(24);
   const colW = (width - padX * 2 - colGap) / 2;
-  const rowCount = Math.ceil(rows.length / 2);
-  const boxHeight = padY * 2 + titleSize + px(6) + rowCount * (rowSize + rowGap) - rowGap;
+
+  const cells = rows.map((row) => {
+    const labelText = `${row.label}: `;
+    const labelW = font.widthOfTextAtSize(labelText, rowSize);
+    return { labelText, labelW, lines: wrapText(bold, row.value, rowSize, colW - labelW) };
+  });
+
+  const gridRows: { left: (typeof cells)[number]; right?: (typeof cells)[number] }[] = [];
+  for (let i = 0; i < cells.length; i += 2) gridRows.push({ left: cells[i], right: cells[i + 1] });
+
+  const rowHeights = gridRows.map(
+    (gr) => Math.max(gr.left.lines.length, gr.right?.lines.length ?? 1) * (rowSize + lineGap) - lineGap
+  );
+  const contentHeight = rowHeights.reduce((a, b) => a + b, 0) + (gridRows.length - 1) * rowGap;
+  const boxHeight = padY * 2 + titleSize + px(6) + contentHeight;
   const boxBottom = startY - boxHeight;
 
   page.drawRectangle({
@@ -165,20 +181,23 @@ function drawInfoBox(
   page.drawText(title, { x: x + padX, y: textY, size: titleSize, font: bold, color: INK });
   textY -= titleSize + px(6);
 
-  rows.forEach((row, i) => {
-    const col = i % 2;
-    const r = Math.floor(i / 2);
-    const rx = x + padX + col * (colW + colGap);
-    const ry = textY - r * (rowSize + rowGap);
-    const labelText = `${row.label}: `;
-    page.drawText(labelText, { x: rx, y: ry, size: rowSize, font, color: MUTED });
-    page.drawText(row.value, {
-      x: rx + font.widthOfTextAtSize(labelText, rowSize),
-      y: ry,
-      size: rowSize,
-      font: bold,
-      color: INK,
+  gridRows.forEach((gr, i) => {
+    [gr.left, gr.right].forEach((cell, col) => {
+      if (!cell) return;
+      const cx = x + padX + col * (colW + colGap);
+      page.drawText(cell.labelText, { x: cx, y: textY, size: rowSize, font, color: MUTED });
+      page.drawText(cell.lines[0] ?? "—", { x: cx + cell.labelW, y: textY, size: rowSize, font: bold, color: INK });
+      for (let li = 1; li < cell.lines.length; li++) {
+        page.drawText(cell.lines[li], {
+          x: cx,
+          y: textY - li * (rowSize + lineGap),
+          size: rowSize,
+          font: bold,
+          color: INK,
+        });
+      }
     });
+    textY -= rowHeights[i] + rowGap;
   });
 
   return boxBottom;
@@ -358,7 +377,7 @@ export async function generateDocumentPdf(doc: DocumentRow): Promise<Uint8Array>
       contentW,
       MUTED
     );
-    y -= px(20);
+    y -= px(48);
 
     const ackColW = contentW * 0.45;
     page.drawLine({ start: { x: PAD_SIDE, y }, end: { x: PAD_SIDE + ackColW, y }, thickness: 1, color: rgb(0.2, 0.2, 0.2) });
