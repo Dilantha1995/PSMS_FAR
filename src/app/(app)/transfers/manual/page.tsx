@@ -43,10 +43,14 @@ export default function ManualTransferPage() {
             <Field label="From Department" name="fromDepartment" />
             <Field label="From Custodian" name="fromCustodian" />
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Field label="To Location" name="toLocation" />
             <Field label="To Department" name="toDepartment" />
-            <Field label="To Custodian" name="toCustodian" />
+          </div>
+          <h3 className="font-semibold text-slate-800 pt-2">Receiving Person</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <Field label="Name" name="toCustodian" />
+            <Field label="Designation" name="toDesignation" />
           </div>
 
           <Field label="Approved By" name="approvedBy" />

@@ -109,6 +109,81 @@ function drawTable(
   return y;
 }
 
+/** Wraps and draws a block of text, returning the y just below the last line. */
+function drawParagraph(
+  page: PDFPage,
+  font: PDFFont,
+  text: string,
+  size: number,
+  x: number,
+  startY: number,
+  width: number,
+  color: RGB = MUTED
+): number {
+  const lineHeight = size + px(4);
+  let y = startY;
+  for (const line of wrapText(font, text, size, width)) {
+    page.drawText(line, { x, y: y - size, size, font, color });
+    y -= lineHeight;
+  }
+  return y;
+}
+
+/** A shaded 2-column key/value box, e.g. "Receiving Person" details. */
+function drawInfoBox(
+  page: PDFPage,
+  font: PDFFont,
+  bold: PDFFont,
+  title: string,
+  rows: RowSpec[],
+  x: number,
+  startY: number,
+  width: number
+): number {
+  const padX = px(14);
+  const padY = px(10);
+  const titleSize = px(12);
+  const rowSize = px(12);
+  const rowGap = px(6);
+  const colGap = px(24);
+  const colW = (width - padX * 2 - colGap) / 2;
+  const rowCount = Math.ceil(rows.length / 2);
+  const boxHeight = padY * 2 + titleSize + px(6) + rowCount * (rowSize + rowGap) - rowGap;
+  const boxBottom = startY - boxHeight;
+
+  page.drawRectangle({
+    x,
+    y: boxBottom,
+    width,
+    height: boxHeight,
+    color: rgb(0.973, 0.98, 0.988),
+    borderWidth: 1,
+    borderColor: BORDER,
+  });
+
+  let textY = startY - padY - titleSize;
+  page.drawText(title, { x: x + padX, y: textY, size: titleSize, font: bold, color: INK });
+  textY -= titleSize + px(6);
+
+  rows.forEach((row, i) => {
+    const col = i % 2;
+    const r = Math.floor(i / 2);
+    const rx = x + padX + col * (colW + colGap);
+    const ry = textY - r * (rowSize + rowGap);
+    const labelText = `${row.label}: `;
+    page.drawText(labelText, { x: rx, y: ry, size: rowSize, font, color: MUTED });
+    page.drawText(row.value, {
+      x: rx + font.widthOfTextAtSize(labelText, rowSize),
+      y: ry,
+      size: rowSize,
+      font: bold,
+      color: INK,
+    });
+  });
+
+  return boxBottom;
+}
+
 export async function generateDocumentPdf(doc: DocumentRow): Promise<Uint8Array> {
   const p = doc.payload as any;
   const isDisposal = p.kind === "DISPOSAL";
@@ -156,6 +231,38 @@ export async function generateDocumentPdf(doc: DocumentRow): Promise<Uint8Array>
   page.drawText(dateValue, { x: dateStartX + dateLabelW, y, size: metaSize, font, color: INK });
   y -= metaSize + px(18);
 
+  if (!isDisposal) {
+    y = drawInfoBox(
+      page,
+      font,
+      bold,
+      "Receiving Person",
+      [
+        { label: "Name", value: p.to?.custodian || "—" },
+        { label: "Designation", value: p.to?.designation || "—" },
+        { label: "Department", value: p.to?.department || "—" },
+        { label: "Location", value: p.to?.location || "—" },
+      ],
+      PAD_SIDE,
+      y,
+      contentW
+    );
+    y -= px(14);
+
+    const introSize = px(12);
+    y = drawParagraph(
+      page,
+      font,
+      `Dear ${p.to?.custodian || "Recipient"}, please find below the asset(s) handed over to you for official use. Kindly utilize and safeguard the item(s) responsibly.`,
+      introSize,
+      PAD_SIDE,
+      y,
+      contentW,
+      rgb(0.2, 0.2, 0.2)
+    );
+    y -= px(6);
+  }
+
   // Main details table
   const rows: RowSpec[] = [
     { label: "Asset Tag", value: p.assetTag || "—" },
@@ -174,10 +281,6 @@ export async function generateDocumentPdf(doc: DocumentRow): Promise<Uint8Array>
     rows.push({
       label: "From (Location / Dept / Custodian)",
       value: `${p.from?.location || "—"} / ${p.from?.department || "—"} / ${p.from?.custodian || "—"}`,
-    });
-    rows.push({
-      label: "To (Location / Dept / Custodian)",
-      value: `${p.to?.location || "—"} / ${p.to?.department || "—"} / ${p.to?.custodian || "—"}`,
     });
     rows.push({ label: "Transfer Type", value: p.external ? "External (leaves company)" : "Internal" });
   }
@@ -207,9 +310,11 @@ export async function generateDocumentPdf(doc: DocumentRow): Promise<Uint8Array>
 
   // Signature block
   y -= px(64);
-  const signLabels = ["Prepared By", "Approved By", "Received By"];
+  const signLabels = isDisposal
+    ? ["Prepared By", "Approved By", "Received By"]
+    : ["Prepared By", "Checked By", "Approved By", "Handed Over By"];
   const gap = px(32);
-  const colW = (contentW - gap * 2) / 3;
+  const colW = (contentW - gap * (signLabels.length - 1)) / signLabels.length;
   signLabels.forEach((label, i) => {
     const x = PAD_SIDE + i * (colW + gap);
     page.drawLine({ start: { x, y }, end: { x: x + colW, y }, thickness: 1, color: rgb(0.2, 0.2, 0.2) });
@@ -233,6 +338,40 @@ export async function generateDocumentPdf(doc: DocumentRow): Promise<Uint8Array>
       color: FAINT,
     });
   });
+
+  if (!isDisposal) {
+    y -= px(50);
+    page.drawLine({ start: { x: PAD_SIDE, y }, end: { x: PAD_SIDE + contentW, y }, thickness: 1, color: BORDER });
+    y -= px(14);
+
+    const ackHeadSize = px(12);
+    page.drawText("ACKNOWLEDGMENT", { x: PAD_SIDE, y: y - ackHeadSize, size: ackHeadSize, font: bold, color: INK });
+    y -= ackHeadSize + px(6);
+
+    y = drawParagraph(
+      page,
+      font,
+      "By signing below, I acknowledge that the asset(s) listed above have been handed over to me and are my responsibility until they are returned. I understand that if they are lost, stolen, or damaged while in my care, I will be held responsible for their repair or replacement.",
+      px(10.5),
+      PAD_SIDE,
+      y,
+      contentW,
+      MUTED
+    );
+    y -= px(20);
+
+    const ackColW = contentW * 0.45;
+    page.drawLine({ start: { x: PAD_SIDE, y }, end: { x: PAD_SIDE + ackColW, y }, thickness: 1, color: rgb(0.2, 0.2, 0.2) });
+    const ackLabelSize = px(11);
+    page.drawText("Acknowledged & Received By", { x: PAD_SIDE, y: y - ackLabelSize - px(6), size: ackLabelSize, font, color: MUTED });
+    page.drawText("Name / Signature / Date", {
+      x: PAD_SIDE,
+      y: y - ackLabelSize - px(6) - px(10) - px(3),
+      size: px(10),
+      font,
+      color: FAINT,
+    });
+  }
 
   // Footer reference/page meta, matches .doc-ref
   const meta = `Ref: ${doc.referenceNo}  ·  Page 1 of ${doc.pageCount}`;

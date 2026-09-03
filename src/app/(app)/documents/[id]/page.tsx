@@ -17,15 +17,31 @@ function Row({ label, value }: { label: string; value: React.ReactNode }) {
   );
 }
 
-function SignBlock() {
+function SignBlock({ labels = ["Prepared By", "Approved By", "Received By"] }: { labels?: string[] }) {
   return (
     <div style={{ display: "flex", justifyContent: "space-between", marginTop: 64, gap: 32 }}>
-      {["Prepared By", "Approved By", "Received By"].map((l) => (
+      {labels.map((l) => (
         <div key={l} style={{ flex: 1, textAlign: "center" }}>
           <div style={{ borderTop: "1px solid #333", paddingTop: 6, fontSize: 11, color: "#555" }}>{l}</div>
           <div style={{ fontSize: 10, color: "#999", marginTop: 3 }}>Name / Signature / Date</div>
         </div>
       ))}
+    </div>
+  );
+}
+
+function InfoBox({ title, rows }: { title: string; rows: [string, React.ReactNode][] }) {
+  return (
+    <div style={{ border: "1px solid #e2e8f0", borderRadius: 6, background: "#f8fafc", padding: "10px 14px", margin: "0 0 14px" }}>
+      <div style={{ fontSize: 12, fontWeight: 700, color: "#111", marginBottom: 6 }}>{title}</div>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "4px 24px" }}>
+        {rows.map(([label, value]) => (
+          <div key={label} style={{ fontSize: 12 }}>
+            <span style={{ color: "#555" }}>{label}: </span>
+            <span style={{ fontWeight: 600, color: "#111" }}>{value ?? "—"}</span>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
@@ -70,6 +86,24 @@ export default async function DocumentView({ params }: { params: { id: string } 
           </div>
         </div>
 
+        {!isDisposal && (
+          <>
+            <InfoBox
+              title="Receiving Person"
+              rows={[
+                ["Name", p.to?.custodian || "—"],
+                ["Designation", p.to?.designation || "—"],
+                ["Department", p.to?.department || "—"],
+                ["Location", p.to?.location || "—"],
+              ]}
+            />
+            <p style={{ fontSize: 12, color: "#333", lineHeight: 1.5, margin: "0 0 14px" }}>
+              Dear {p.to?.custodian || "Recipient"}, please find below the asset(s) handed over to you for
+              official use. Kindly utilize and safeguard the item(s) responsibly.
+            </p>
+          </>
+        )}
+
         <table style={tableStyle}>
           <tbody>
             <Row label="Asset Tag" value={p.assetTag} />
@@ -89,10 +123,6 @@ export default async function DocumentView({ params }: { params: { id: string } 
                 <Row
                   label="From (Location / Dept / Custodian)"
                   value={`${p.from?.location || "—"} / ${p.from?.department || "—"} / ${p.from?.custodian || "—"}`}
-                />
-                <Row
-                  label="To (Location / Dept / Custodian)"
-                  value={`${p.to?.location || "—"} / ${p.to?.department || "—"} / ${p.to?.custodian || "—"}`}
                 />
                 <Row label="Transfer Type" value={p.external ? "External (leaves company)" : "Internal"} />
               </>
@@ -121,7 +151,26 @@ export default async function DocumentView({ params }: { params: { id: string } 
           </>
         )}
 
-        <SignBlock />
+        <SignBlock
+          labels={isDisposal ? ["Prepared By", "Approved By", "Received By"] : ["Prepared By", "Checked By", "Approved By", "Handed Over By"]}
+        />
+
+        {!isDisposal && (
+          <div style={{ marginTop: 28, borderTop: "1px solid #e2e8f0", paddingTop: 14 }}>
+            <div style={{ fontSize: 12, fontWeight: 700, color: "#111", marginBottom: 4 }}>ACKNOWLEDGMENT</div>
+            <p style={{ fontSize: 11, color: "#333", fontStyle: "italic", lineHeight: 1.5, margin: "0 0 20px" }}>
+              By signing below, I acknowledge that the asset(s) listed above have been handed over to me and are
+              my responsibility until they are returned. I understand that if they are lost, stolen, or damaged
+              while in my care, I will be held responsible for their repair or replacement.
+            </p>
+            <div style={{ width: "45%" }}>
+              <div style={{ borderTop: "1px solid #333", paddingTop: 6, fontSize: 11, color: "#555" }}>
+                Acknowledged &amp; Received By
+              </div>
+              <div style={{ fontSize: 10, color: "#999", marginTop: 3 }}>Name / Signature / Date</div>
+            </div>
+          </div>
+        )}
       </DocumentSheet>
     </div>
   );
