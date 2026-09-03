@@ -46,7 +46,7 @@ export default async function DocumentView({ params }: { params: { id: string } 
 
   return (
     <div className="py-8 px-4">
-      <PrintBar backHref="/documents" />
+      <PrintBar backHref="/documents" pdfHref={`/api/documents/${doc.id}/pdf`} />
 
       {p.manual && (
         <div className="no-print max-w-[210mm] mx-auto mb-4 rounded-md bg-amber-50 border border-amber-200 px-4 py-2 text-sm text-amber-800">
