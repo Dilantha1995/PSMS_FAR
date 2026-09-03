@@ -6,7 +6,7 @@ import { eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { logActivity } from "@/lib/activity";
-import { currentUser } from "@/lib/auth";
+import { currentUser, isAdmin } from "@/lib/auth";
 import { nextReference } from "@/lib/reference";
 
 export async function createTransfer(formData: FormData) {
@@ -184,4 +184,103 @@ export async function createManualTransfer(formData: FormData) {
   revalidatePath("/transfers");
   revalidatePath("/documents");
   redirect(`/documents/${doc.id}`);
+}
+
+/**
+ * Edits an already-generated Transfer Note. Admin-only: the note has
+ * usually already been printed/handed over, so correcting it after the
+ * fact is a privileged action, not something any user should do freely.
+ * Updates the document's payload (what the note renders from) and, when
+ * the transfer is FAR-linked, the mirrored row in the transfers list —
+ * it does not touch the asset's current location/custodian, since a
+ * later transfer may have already moved it on.
+ */
+export async function updateTransfer(formData: FormData) {
+  if (!isAdmin()) throw new Error("Only administrators can edit an already-submitted transfer note.");
+
+  const documentId = Number(formData.get("documentId"));
+  const [doc] = await db.select().from(documents).where(eq(documents.id, documentId));
+  if (!doc) throw new Error("Document not found");
+  if (doc.type !== "TRANSFER") throw new Error("Only Transfer Notes can be edited here.");
+
+  const assetTag = String(formData.get("assetTag") || "").trim();
+  const assetName = String(formData.get("assetName") || "").trim();
+  const serialNo = String(formData.get("serialNo") || "").trim() || null;
+  const category = String(formData.get("category") || "").trim() || null;
+  const transferDate = String(formData.get("transferDate") || "");
+  const fromLocation = String(formData.get("fromLocation") || "").trim() || null;
+  const fromDepartment = String(formData.get("fromDepartment") || "").trim() || null;
+  const fromCustodian = String(formData.get("fromCustodian") || "").trim() || null;
+  const toLocation = String(formData.get("toLocation") || "").trim() || null;
+  const toDepartment = String(formData.get("toDepartment") || "").trim() || null;
+  const toCustodian = String(formData.get("toCustodian") || "").trim() || null;
+  const toDesignation = String(formData.get("toDesignation") || "").trim() || null;
+  const accessories = String(formData.get("accessories") || "").trim() || null;
+  const reason = String(formData.get("reason") || "").trim() || null;
+  const approvedBy = String(formData.get("approvedBy") || "").trim() || null;
+  const external = formData.get("external") === "on";
+
+  if (!assetTag || !assetName || !transferDate) {
+    throw new Error("Asset Code, Asset Name and Transfer Date are required");
+  }
+
+  const prevPayload = doc.payload as any;
+  const payload = {
+    ...prevPayload,
+    assetTag,
+    assetName,
+    serialNo,
+    category,
+    transferDate,
+    from: { location: fromLocation, custodian: fromCustodian, department: fromDepartment },
+    to: { location: toLocation, custodian: toCustodian, department: toDepartment, designation: toDesignation },
+    external,
+    accessories,
+    reason,
+    approvedBy,
+  };
+
+  const user = currentUser();
+
+  await db
+    .update(documents)
+    .set({
+      title: prevPayload.manual ? `Asset Transfer Note (Manual) — ${assetTag}` : `Asset Transfer Note — ${assetTag}`,
+      relatedAssetTag: assetTag,
+      payload,
+    })
+    .where(eq(documents.id, documentId));
+
+  // Keep the Transfers list in sync for FAR-linked notes (manual notes have no row there).
+  await db
+    .update(transfers)
+    .set({
+      assetTag,
+      assetName,
+      transferDate,
+      fromLocation,
+      toLocation,
+      fromCustodian,
+      toCustodian,
+      fromDepartment,
+      toDepartment,
+      reason,
+      approvedBy,
+    })
+    .where(eq(transfers.referenceNo, doc.referenceNo));
+
+  await logActivity({
+    action: "TRANSFER_NOTE_EDITED",
+    entityType: "DOCUMENT",
+    entityId: documentId,
+    entityLabel: `${assetTag} — ${assetName}`,
+    summary: `Edited Transfer Note ${doc.referenceNo} (${assetTag})`,
+    details: { referenceNo: doc.referenceNo, documentId },
+    user,
+  });
+
+  revalidatePath(`/documents/${documentId}`);
+  revalidatePath("/documents");
+  revalidatePath("/transfers");
+  redirect(`/documents/${documentId}`);
 }
