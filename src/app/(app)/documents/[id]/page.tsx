@@ -48,6 +48,12 @@ export default async function DocumentView({ params }: { params: { id: string } 
     <div className="py-8 px-4">
       <PrintBar backHref="/documents" />
 
+      {p.manual && (
+        <div className="no-print max-w-[210mm] mx-auto mb-4 rounded-md bg-amber-50 border border-amber-200 px-4 py-2 text-sm text-amber-800">
+          This note was generated manually — the asset is not recorded in the FAR.
+        </div>
+      )}
+
       <DocumentSheet referenceNo={doc.referenceNo} page={1} pages={doc.pageCount}>
         <div style={{ textAlign: "center", margin: "8px 0 4px" }}>
           <h1 style={{ fontSize: 18, fontWeight: 700, color: "#111", letterSpacing: 0.5 }}>

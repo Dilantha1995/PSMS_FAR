@@ -18,27 +18,32 @@ export default async function TransfersPage({ searchParams }: { searchParams: { 
         title="Transfers"
         subtitle="Asset transfers and generated notes"
         action={
-          active.length > 0 ? (
-            <form method="get" className="flex gap-2 items-end">
-              <select
-                name="asset"
-                className="rounded-md border border-slate-300 px-3 py-2 text-sm bg-white"
-                defaultValue=""
-              >
-                <option value="" disabled>
-                  Select asset to transfer…
-                </option>
-                {active.map((a) => (
-                  <option key={a.id} value={a.id}>
-                    {a.assetTag} — {a.name}
+          <div className="flex gap-2 items-end">
+            {active.length > 0 && (
+              <form method="get" className="flex gap-2 items-end">
+                <select
+                  name="asset"
+                  className="rounded-md border border-slate-300 px-3 py-2 text-sm bg-white"
+                  defaultValue=""
+                >
+                  <option value="" disabled>
+                    Select asset to transfer…
                   </option>
-                ))}
-              </select>
-              <Btn variant="secondary" type="submit">
-                Go
-              </Btn>
-            </form>
-          ) : undefined
+                  {active.map((a) => (
+                    <option key={a.id} value={a.id}>
+                      {a.assetTag} — {a.name}
+                    </option>
+                  ))}
+                </select>
+                <Btn variant="secondary" type="submit">
+                  Go
+                </Btn>
+              </form>
+            )}
+            <Btn href="/transfers/manual" variant="secondary">
+              Manual Note (asset not in FAR)
+            </Btn>
+          </div>
         }
       />
 

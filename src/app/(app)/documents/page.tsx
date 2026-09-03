@@ -38,7 +38,14 @@ export default async function DocumentsPage() {
                     </Link>
                   </td>
                   <td className="px-4 py-3 text-slate-600">{TYPE_LABELS[d.type] || d.type}</td>
-                  <td className="px-4 py-3 text-slate-800">{d.title}</td>
+                  <td className="px-4 py-3 text-slate-800">
+                    {d.title}
+                    {(d.payload as any)?.manual && (
+                      <span className="ml-2 inline-block px-1.5 py-0.5 rounded text-[10px] font-medium bg-amber-100 text-amber-800 align-middle">
+                        Manual
+                      </span>
+                    )}
+                  </td>
                   <td className="px-4 py-3 text-slate-500 text-xs">{fmtDateTime(d.createdAt)}</td>
                   <td className="px-4 py-3 text-right tabular-nums">{d.pageCount}</td>
                 </tr>
