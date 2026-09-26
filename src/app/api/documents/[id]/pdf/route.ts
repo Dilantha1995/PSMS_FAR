@@ -14,14 +14,24 @@ export async function GET(_req: NextRequest, { params }: { params: { id: string 
   if (!doc) return NextResponse.json({ error: "Document not found" }, { status: 404 });
 
   const pdfBytes = await generateDocumentPdf(doc);
-  const filename = `${doc.referenceNo.replace(/\//g, "-")}.pdf`;
+
+  // Stamp the filename with the current time so a re-download after an edit
+  // can never be mistaken for (or silently skipped in favor of) an older
+  // file of the same name already sitting in the Downloads folder.
+  const stamp = new Date()
+    .toISOString()
+    .replace(/[-:]/g, "")
+    .replace("T", "-")
+    .slice(0, 13);
+  const filename = `${doc.referenceNo.replace(/\//g, "-")}_${stamp}.pdf`;
 
   return new NextResponse(Buffer.from(pdfBytes), {
     status: 200,
     headers: {
       "Content-Type": "application/pdf",
       "Content-Disposition": `attachment; filename="${filename}"`,
-      "Cache-Control": "no-store",
+      "Cache-Control": "no-store, no-cache, must-revalidate",
+      Pragma: "no-cache",
     },
   });
 }
